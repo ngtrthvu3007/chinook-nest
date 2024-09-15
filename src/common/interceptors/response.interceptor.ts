@@ -1,0 +1,52 @@
+import {
+  Injectable,
+  NestInterceptor,
+  ExecutionContext,
+  CallHandler,
+  HttpException,
+  NotFoundException,
+} from '@nestjs/common';
+import { Observable, throwError } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
+
+@Injectable()
+export class ResponseFormatInterceptor implements NestInterceptor {
+  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+    const request = context.switchToHttp().getRequest();
+    const response = context.switchToHttp().getResponse();
+    const statusCode = response.statusCode;
+
+    return next.handle().pipe(
+      map((data) => {
+        if (!Boolean(data)) {
+          throw new NotFoundException(`Data not found`);
+        }
+        return {
+          statusCode,
+          message: statusCode >= 400 ? 'Error' : 'Success',
+          error: statusCode >= 400 ? response.message : null,
+          path: request.url,
+          method: request.method,
+          data,
+        };
+      }),
+
+      catchError((err) => {
+        if (err.code === 'P2002') {
+          return throwError(() => err); // throw error for exception filter
+        }
+        const { response } = err;
+        const statusCode = response.statusCode || 500;
+        const errorResponse = {
+          statusCode,
+          message: response.message || 'Internal server error',
+          error: response.error || 'Error',
+          path: request.url,
+          method: request.method,
+          data: {},
+        };
+        return throwError(() => new HttpException(errorResponse, statusCode));
+      }),
+    );
+  }
+}
