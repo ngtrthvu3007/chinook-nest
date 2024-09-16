@@ -9,8 +9,8 @@ export class UserEntity {
   Name: string;
 
   @Column({ type: 'varchar', length: 120, nullable: false, unique: true })
-  email: string;
+  Email: string;
 
   @Column({ type: 'varchar', length: 120, nullable: false })
-  password: string;
+  Password: string;
 }

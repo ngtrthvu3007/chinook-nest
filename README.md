@@ -73,10 +73,69 @@ Nest is an MIT-licensed open source project. It can grow thanks to the sponsors 
 Nest is [MIT licensed](LICENSE).
 
 ## API Documents
+
 [https://restful-nest.onrender.com/api](https://restful-nest.onrender.com/api)
 
-## .env example 
+## .env example
+
 ```.env
 // .env
 DATABASE_URL="postgres://myuser:mypassword@localhost:5432/db-name"
 ```
+
+### Chinook database
+
+A sample database for a digital media store, including tables for artists, albums, media tracks, invoices, customers, and more.
+
+1. Create a `chinook` database:
+
+   ```sql
+   CREATE DATABASE chinook;
+   ```
+
+2. Download the source file:
+
+   <CodeBlock shouldWrap>
+
+   ```bash
+   wget https://raw.githubusercontent.com/neondatabase/postgres-sample-dbs/main/chinook.sql
+   ```
+
+   </CodeBlock>
+
+3. Navigate to the directory where you downloaded the source file, and run the following command:
+
+   <CodeBlock shouldWrap>
+
+   ```bash
+   psql -d "postgres://<user>:<password>@<hostname>/chinook" -f chinook.sql
+   ```
+
+   </CodeBlock>
+
+4. Connect to the `chinook` database:
+
+   ```bash
+   psql postgres://<user>:<password>@<hostname>/chinook
+   ```
+
+5. Find out the most sold item by track title:
+
+   ```sql
+   SELECT
+   T."Name" AS "Track Title",
+   SUM(IL."Quantity") AS "Total Sold"
+   FROM
+       "Track" T
+   JOIN
+       "InvoiceLine" IL ON T."TrackId" = IL."TrackId"
+   GROUP BY
+       T."Name"
+   ORDER BY
+       "Total Sold" DESC
+   LIMIT 1;
+   ```
+
+- Source: [https://github.com/lerocha/chinook-database](https://github.com/lerocha/chinook-database)
+- License: [LICENSE.md](https://github.com/lerocha/chinook-database/blob/master/LICENSE.md)
+- `Copyright (c) 2008-2017 Luis Rocha`
