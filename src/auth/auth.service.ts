@@ -4,47 +4,53 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { AuthEntity } from 'src/entities/auth.entity';
-import { DataSource } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
+import { UsersService } from 'src/users/users.service';
+import { RegisterDto } from './dto/register.dto';
+import { UserEntity } from 'src/entities/users.entity';
+import { DataSource } from 'typeorm';
+
+export const roundsOfHashing = 10;
 
 @Injectable()
 export class AuthService {
   private userRepository;
-  private jwtService: JwtService;
+  constructor(
+    private dataSource: DataSource,
+    private usersService: UsersService,
+    private jwtService: JwtService,
+  ) {
+    this.userRepository = this.dataSource.getRepository(UserEntity);
+  }
 
-  constructor(private dataSource: DataSource) {
-    this.userRepository = this.dataSource.getRepository(AuthEntity);
+  async register(registerDto: RegisterDto): Promise<UserEntity> {
+    const hashedPassword = await bcrypt.hash(
+      registerDto.password,
+      roundsOfHashing,
+    );
+
+    const newUser = this.userRepository.create({
+      Name: registerDto.name,
+      Email: registerDto.email,
+      Password: hashedPassword,
+    });
+    return await this.userRepository.save(newUser);
   }
 
   async login(email: string, password: string): Promise<AuthEntity> {
-    // Step 1: Fetch a user with the given email
-    const user = await this.userRepository.findUserByEmail(email);
+    const user = await this.usersService.getUserDetailBy('Email', email);
 
-    // If no user is found, throw an error
-    if (!user) {
-      throw new NotFoundException(`No user found for email: ${email}`);
-    }
+    if (!user) throw new NotFoundException(`No user found for email: ${email}`);
 
-    // Step 2: Check if the password is correct
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isPasswordValid = await bcrypt.compare(password, user.Password);
 
-    // If password does not match, throw an error
-    if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid password');
-    }
+    // chưa handle error
+    if (!isPasswordValid) throw new UnauthorizedException('Invalid password');
 
-    // Step 3: Generate a JWT containing the user's ID and return it
     return {
-      accessToken: this.jwtService.sign({ userId: user.id }),
+      accessToken: this.jwtService.sign({ UserId: user.UserId }),
       message: 'Login success',
     };
   }
-
-  // async logout(email: string): Promise<any> {
-  //   return await this.userRepository.findOne({
-  //     where: { AlbumId },
-  //     relations: ['Artist'],
-  //   });
-  // }
 }

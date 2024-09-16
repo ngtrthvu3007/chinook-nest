@@ -1,12 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { ArtistEntity } from '../entities/artists.entity';
-
-export interface CreateUser {
-  username: string;
-  password: string;
-}
-
 @Injectable()
 export class ArtistsService {
   private artistRepository;
