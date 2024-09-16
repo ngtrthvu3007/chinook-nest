@@ -80,7 +80,10 @@ Nest is [MIT licensed](LICENSE).
 
 ```.env
 // .env
-DATABASE_URL="postgres://myuser:mypassword@localhost:5432/db-name"
+PSQL_USER=your-database-username
+PSQL_PASSWORD=your-database-password
+PSQL_DATABASE=your-database-name
+JWT_SECRET_KEY=your-secret-key
 ```
 
 ### Chinook database
